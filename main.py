@@ -212,49 +212,53 @@ st.text_input(
 )
 
 # ============================================================
-# 그래프 4. 영화별 누적 일관객 TOP 10
+# 그래프 4. 영화별 일관객 TOP 10
 # ============================================================
 st.divider()
-st.header("4. 영화별 누적 일관객 TOP 10")
+st.header("4. 영화별 일관객 TOP 10")
 
-# 영화별로 이 기간의 일관객을 모두 합산하고 TOP 10 선정
-top10_movies = (
+# 영화별 이 기간 일관객 합계와 10위권에 든 날수를 계산
+movie_summary = (
     df.groupby("영화명")
     .agg(
-        총일관객=("일관객", "sum"),
-        10위권_등장일수=("날짜", "nunique"),
+        일관객합계=("일관객", "sum"),
+        10위권_든_날수=("날짜", "nunique"),
     )
-    .sort_values("총일관객", ascending=False)
+    .sort_values("일관객합계", ascending=False)
     .head(10)
+    .sort_values("일관객합계", ascending=True)
     .reset_index()
 )
 
-# 관객이 많은 영화가 위에 오도록 역순으로 배치
-plot_top10 = top10_movies.sort_values("총일관객", ascending=True)
-
 fig4 = px.bar(
-    plot_top10,
-    x="총일관객",
+    movie_summary,
+    x="일관객합계",
     y="영화명",
     orientation="h",
+    text="일관객합계",
     title="영화별 이 기간 일관객 TOP 10",
     labels={
-        "총일관객": "이 기간 일관객 합계",
-        "영화명": "영화",
+        "영화명": "영화명",
+        "일관객합계": "일관객 합계",
     },
-    hover_data={
-        "총일관객": ":,",
-        "10위권_등장일수": True,
-    },
+    custom_data=["10위권_든_날수"],
 )
 
 fig4.update_traces(
-    hovertemplate="영화: %{y}<br>이 기간 일관객 합계: %{x:,}명<br>10위권에 든 날수: %{customdata[0]}일<extra></extra>"
+    texttemplate="%{text:,}명",
+    textposition="outside",
+    hovertemplate=(
+        "영화명: %{y}<br>"
+        "이 기간 일관객 합계: %{x:,}명<br>"
+        "10위권에 든 날수: %{customdata[0]}일"
+        "<extra></extra>"
+    ),
 )
 
 fig4.update_layout(
     xaxis_title="이 기간 일관객 합계(명)",
-    yaxis_title="영화",
+    yaxis_title="영화명",
+    yaxis={"categoryorder": "array", "categoryarray": movie_summary["영화명"].tolist()},
 )
 
 st.plotly_chart(fig4, use_container_width=True)
@@ -262,7 +266,7 @@ st.plotly_chart(fig4, use_container_width=True)
 st.markdown("**이 그래프로 알 수 있는 것**")
 st.text_input(
     "문구를 입력하세요.",
-    placeholder="예: 이 기간 동안 누적 일관객이 가장 많았던 영화와 상위권 영화들의 차이를 비교할 수 있다.",
+    placeholder="예: 이 기간 동안 누적 일관객이 가장 많았던 영화와 10위권에 오래 머문 영화를 비교할 수 있다.",
     key="graph4_note",
 )
 
