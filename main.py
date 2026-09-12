@@ -145,3 +145,40 @@ st.text_input(
     placeholder="예: 박스오피스 상위권 영화 중에서도 대다수의 관객 수 분포와 극소수 흥행작의 편중도를 확인할 수 있다.",
     key="graph3_note",
 )
+
+# ============================================================
+# 그래프 4. 개봉일 스크린 수와 총 관객 수의 관계 (산점도)
+# ============================================================
+st.divider()
+st.header("4. 개봉일 스크린 수와 총 관객 수의 관계")
+
+fig4 = px.scatter(
+    df,
+    x="first_scrn",
+    y="total_audi",
+    color="genre",               # 장르별로 점 색상 다르게 지정
+    hover_name="movieNm",        # 마우스를 올렸을 때 나타나는 툴팁 제목에 영화명 표시
+    title="개봉일 스크린 수 대 총 관객 수 산점도",
+    labels={
+        "first_scrn": "개봉일 스크린 수(개)",
+        "total_audi": "총 관객 수(명)",
+        "genre": "장르",
+    },
+)
+
+fig4.update_traces(
+    hovertemplate="<b>%{hovertext}</b><br>장르: %{fullData.name}<br>개봉일 스크린 수: %{x:,}개<br>총 관객 수: %{y:,}명<extra></extra>"
+)
+
+fig4.update_layout(
+    legend_title_text="장르",
+)
+
+st.plotly_chart(fig4, use_container_width=True)
+
+st.markdown("**이 그래프로 알 수 있는 것**")
+st.text_input(
+    "문구를 입력하세요.",
+    placeholder="예: 개봉일 스크린 수가 많을수록 총 관객 수가 증가하는 상관관계가 있는지, 장르별 선점 패턴을 확인할 수 있다.",
+    key="graph4_note",
+)
