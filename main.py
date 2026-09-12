@@ -2,88 +2,75 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-st.set_page_config(
-    page_title="영화 데이터 그래프 도감 1 - 시간",
-    page_icon="🎬",
-    layout="wide",
-)
+st.set_page_config(page_title="영화 데이터 그래프 도감 2 - 분포와 관계", layout="wide")
+st.title("영화 데이터 그래프 도감 2 - 분포와 관계")
 
-DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_daily.csv"
-
+DATA_URL = "https://raw.githubusercontent.com/greatsong/modudata/main/data/kobis_movies.csv"
 
 @st.cache_data
 def load_data():
     df = pd.read_csv(DATA_URL)
+    # 개봉일: 여덟 자리 숫자(YYYYMMDD) -> 실제 날짜
+    df["openDt"] = pd.to_datetime(df["openDt"].astype(str), format="%Y%m%d", errors="coerce")
 
-    # 날짜 열을 실제 날짜(datetime)로 변환
-    df["날짜"] = pd.to_datetime(df["날짜"].astype(str), format="%Y%m%d")
+    # 장르가 여러 개면 첫 번째 장르만 사용
+    df["genre"] = (
+        df["genre"]
+        .fillna("미상")
+        .astype(str)
+        .str.split(r"[|/]")
+        .str[0]
+        .str.strip()
+        .replace("", "미상")
+    )
 
-    # 그래프에 사용할 수 있도록 숫자형 열을 정리
-    numeric_cols = ["순위", "일관객", "누적관객", "스크린수", "상영횟수"]
-    for col in numeric_cols:
-        df[col] = pd.to_numeric(df[col], errors="coerce")
-
-    return df.sort_values(["날짜", "순위"]).reset_index(drop=True)
-
-
-st.title("🎬 영화 데이터 그래프 도감 1 - 시간")
-st.write("KOBIS 일별 박스오피스 데이터를 이용해 영화의 시간에 따른 관객 변화를 살펴봅니다.")
+    return df
 
 try:
     df = load_data()
 except Exception as e:
-    st.error("데이터를 불러오는 중 문제가 발생했습니다.")
+    st.error("데이터를 불러오는 중 오류가 발생했습니다.")
     st.exception(e)
     st.stop()
 
-
 # ============================================================
-# 그래프 1. 영화별 날짜에 따른 일관객 변화
-# 앞으로 그래프를 추가할 때 이 구역 아래에 새로운 섹션을 추가하세요.
+# 그래프 1. 장르별 영화 편수
 # ============================================================
-st.header("1. 영화별 날짜에 따른 일관객 변화")
+st.divider()
+st.header("1. 장르별 영화 편수")
 
-movie_list = sorted(df["영화명"].dropna().unique())
-
-selected_movie = st.selectbox(
-    "영화를 선택하세요.",
-    movie_list,
+# 장르별 영화 수를 계산
+genre_counts = (
+    df["genre"]
+    .value_counts()
+    .rename_axis("장르")
+    .reset_index(name="편수")
 )
 
-movie_df = df[df["영화명"] == selected_movie].sort_values("날짜")
-
-fig = px.line(
-    movie_df,
-    x="날짜",
-    y="일관객",
-    markers=True,
-    title=f"「{selected_movie}」 날짜별 일관객 변화",
-    labels={
-        "날짜": "날짜",
-        "일관객": "일관객 수",
-    },
-    hover_data={
-        "날짜": "|%Y-%m-%d",
-        "일관객": ":,",
-    },
+fig1 = px.pie(
+    genre_counts,
+    names="장르",
+    values="편수",
+    hole=0.55,
+    title="장르별 영화 편수",
 )
 
-fig.update_traces(
-    hovertemplate="날짜: %{x|%Y-%m-%d}<br>일관객: %{y:,}명<extra></extra>"
+# 마우스를 올렸을 때 편수와 비율 표시
+fig1.update_traces(
+    textinfo="none",
+    hovertemplate="장르: %{label}<br>편수: %{value}편<br>비율: %{percent}<extra></extra>",
 )
 
-fig.update_layout(
-    hovermode="x unified",
-    xaxis_title="날짜",
-    yaxis_title="일관객 수(명)",
+fig1.update_layout(
+    legend_title_text="장르",
 )
 
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig1, use_container_width=True)
 
 st.markdown("**이 그래프로 알 수 있는 것**")
 st.text_input(
     "문구를 입력하세요.",
-    placeholder="예: 영화의 개봉 후 날짜에 따라 일관객 수가 어떻게 변하는지 알 수 있다.",
+    placeholder="예: 이 기간에는 어떤 장르의 영화가 가장 많이 개봉했는지 알 수 있다.",
     key="graph1_note",
 )
 
