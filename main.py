@@ -103,3 +103,45 @@ st.text_input(
     placeholder="예: 장르별 총 관객 수의 비중과 특정 장르 내에서 어떤 영화가 흥행했는지 알 수 있다.",
     key="graph2_note",
 )
+
+# ============================================================
+# 그래프 3. 총 관객 수 분포 (히스토그램)
+# ============================================================
+st.divider()
+st.header("3. 총 관객 수 분포")
+
+fig3 = px.histogram(
+    df,
+    x="total_audi",
+    nbins=30,
+    title="영화별 총 관객 수 분포 (히스토그램)",
+    labels={"total_audi": "총 관객 수(명)"},
+)
+
+fig3.update_layout(
+    yaxis_title_text="영화 수",
+)
+
+fig3.update_traces(
+    hovertemplate="관객 수 구간: %{x}<br>영화 수: %{y}편<extra></extra>"
+)
+
+st.plotly_chart(fig3, use_container_width=True)
+
+# 최댓값 영화 및 분포 특징 동적 추출
+top_movie = df.loc[df["total_audi"].idxmax()]
+top_movie_name = top_movie["movieNm"]
+top_movie_audi = top_movie["total_audi"]
+
+st.info(
+    f"💡 **데이터 주요 특징**\n\n"
+    f"- 대부분의 영화는 관객 수가 상대적으로 적은 **하위 구간(약 100만 명 미만)**에 밀집되어 있습니다.\n"
+    f"- 가장 관객 수가 많은 영화는 **{top_movie_name}** (약 {top_movie_audi:,.0f}명)입니다."
+)
+
+st.markdown("**이 그래프로 알 수 있는 것**")
+st.text_input(
+    "문구를 입력하세요.",
+    placeholder="예: 박스오피스 상위권 영화 중에서도 대다수의 관객 수 분포와 극소수 흥행작의 편중도를 확인할 수 있다.",
+    key="graph3_note",
+)
