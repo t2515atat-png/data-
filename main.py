@@ -218,12 +218,17 @@ st.divider()
 st.header("4. 영화별 일관객 TOP 10")
 
 # 영화별 이 기간 일관객 합계와 10위권에 든 날수를 계산
+# 변수명은 파이썬 문법에 맞게 영문으로 만든 뒤, 화면에 사용할 열 이름으로 변경
 movie_summary = (
     df.groupby("영화명")
     .agg(
-        일관객합계=("일관객", "sum"),
-        10위권_든_날수=("날짜", "nunique"),
+        total_audience=("일관객", "sum"),
+        top10_days=("날짜", "nunique"),
     )
+    .rename(columns={
+        "total_audience": "일관객합계",
+        "top10_days": "10위권_든_날수",
+    })
     .sort_values("일관객합계", ascending=False)
     .head(10)
     .sort_values("일관객합계", ascending=True)
