@@ -88,8 +88,70 @@ st.text_input(
 )
 
 # ============================================================
-# 그래프 2. 여기에 다음 그래프를 추가하세요.
+# 그래프 2. 일관객 합계 TOP 5 영화 비교
 # ============================================================
 st.divider()
-st.header("2. 다음 그래프")
+st.header("2. 일관객 합계 TOP 5 영화의 날짜별 변화")
+
+# 이 기간 동안 일관객 합계가 가장 큰 영화 5편을 계산
+top5_movies = (
+    df.groupby("영화명")["일관객"]
+    .sum()
+    .sort_values(ascending=False)
+    .head(5)
+    .index
+    .tolist()
+)
+
+top5_df = df[df["영화명"].isin(top5_movies)].sort_values(["날짜", "영화명"])
+
+fig2 = px.line(
+    top5_df,
+    x="날짜",
+    y="일관객",
+    color="영화명",
+    markers=True,
+    title="일관객 합계가 가장 큰 5편의 날짜별 일관객 변화",
+    labels={
+        "날짜": "날짜",
+        "일관객": "일관객 수",
+        "영화명": "영화",
+    },
+    hover_data={
+        "날짜": "|%Y-%m-%d",
+        "일관객": ":,",
+        "영화명": True,
+    },
+)
+
+fig2.update_traces(
+    hovertemplate="영화: %{fullData.name}<br>"
+                  "날짜: %{x|%Y-%m-%d}<br>"
+                  "일관객: %{y:,}명<extra></extra>"
+)
+
+fig2.update_layout(
+    hovermode="closest",
+    xaxis_title="날짜",
+    yaxis_title="일관객 수(명)",
+    legend_title="영화",
+)
+
+# 범례를 클릭하면 해당 영화의 선을 켜고 끌 수 있음
+st.plotly_chart(fig2, use_container_width=True)
+
+st.markdown("**이 그래프로 알 수 있는 것**")
+st.text_input(
+    "문구를 입력하세요.",
+    placeholder="예: 기간 전체에서 관객 수가 많았던 5편의 날짜별 관객 변화 양상을 비교할 수 있다.",
+    key="graph2_note",
+)
+
+
+# ============================================================
+# 그래프 3. 여기에 다음 그래프를 추가하세요.
+# ============================================================
+st.divider()
+st.header("3. 다음 그래프")
 st.info("앞으로 추가할 그래프를 이 구역에 넣을 수 있습니다.")
+
