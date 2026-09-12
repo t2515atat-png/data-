@@ -276,8 +276,73 @@ st.text_input(
 )
 
 # ============================================================
-# 그래프 5. 여기에 다음 그래프를 추가하세요.
+# 그래프 5. 월 × 요일별 일관객 합계 히트맵
 # ============================================================
 st.divider()
-st.header("5. 다음 그래프")
+st.header("5. 월 × 요일별 일관객 합계")
+
+# 날짜에서 월과 요일을 추출
+heatmap_df = df.copy()
+heatmap_df["월"] = heatmap_df["날짜"].dt.month
+
+weekday_order = ["월요일", "화요일", "수요일", "목요일", "금요일", "토요일", "일요일"]
+weekday_map = {i: weekday_order[i] for i in range(7)}
+heatmap_df["요일"] = heatmap_df["날짜"].dt.weekday.map(weekday_map)
+
+# 월 × 요일별 일관객 합계 계산
+heatmap_data = (
+    heatmap_df.groupby(["월", "요일"], as_index=False)["일관객"]
+    .sum()
+)
+
+# 피벗하여 히트맵 형태로 변환
+heatmap_pivot = heatmap_data.pivot(
+    index="월",
+    columns="요일",
+    values="일관객"
+).reindex(columns=weekday_order)
+
+# Plotly 히트맵
+fig5 = px.imshow(
+    heatmap_pivot,
+    text_auto=",",
+    aspect="auto",
+    title="월 × 요일별 10위권 일관객 합계",
+    labels={
+        "x": "요일",
+        "y": "월",
+        "color": "일관객 합계",
+    },
+)
+
+fig5.update_traces(
+    hovertemplate=(
+        "월: %{y}월<br>"
+        "요일: %{x}<br>"
+        "일관객 합계: %{z:,}명"
+        "<extra></extra>"
+    )
+)
+
+fig5.update_layout(
+    xaxis={"categoryorder": "array", "categoryarray": weekday_order},
+    yaxis={"dtick": 1, "title": "월"},
+    xaxis_title="요일",
+    yaxis_title="월",
+)
+
+st.plotly_chart(fig5, use_container_width=True)
+
+st.markdown("**이 그래프로 알 수 있는 것**")
+st.text_input(
+    "문구를 입력하세요.",
+    placeholder="예: 월과 요일에 따라 10위권 영화의 일관객 합계가 어떻게 달라지는지 알 수 있다.",
+    key="graph5_note",
+)
+
+# ============================================================
+# 그래프 6. 여기에 다음 그래프를 추가하세요.
+# ============================================================
+st.divider()
+st.header("6. 다음 그래프")
 st.info("앞으로 추가할 그래프를 이 구역에 넣을 수 있습니다.")
