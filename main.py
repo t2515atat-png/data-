@@ -212,8 +212,63 @@ st.text_input(
 )
 
 # ============================================================
-# 그래프 4. 여기에 다음 그래프를 추가하세요.
+# 그래프 4. 영화별 누적 일관객 TOP 10
 # ============================================================
 st.divider()
-st.header("4. 다음 그래프")
+st.header("4. 영화별 누적 일관객 TOP 10")
+
+# 영화별로 이 기간의 일관객을 모두 합산하고 TOP 10 선정
+top10_movies = (
+    df.groupby("영화명")
+    .agg(
+        총일관객=("일관객", "sum"),
+        10위권_등장일수=("날짜", "nunique"),
+    )
+    .sort_values("총일관객", ascending=False)
+    .head(10)
+    .reset_index()
+)
+
+# 관객이 많은 영화가 위에 오도록 역순으로 배치
+plot_top10 = top10_movies.sort_values("총일관객", ascending=True)
+
+fig4 = px.bar(
+    plot_top10,
+    x="총일관객",
+    y="영화명",
+    orientation="h",
+    title="영화별 이 기간 일관객 TOP 10",
+    labels={
+        "총일관객": "이 기간 일관객 합계",
+        "영화명": "영화",
+    },
+    hover_data={
+        "총일관객": ":,",
+        "10위권_등장일수": True,
+    },
+)
+
+fig4.update_traces(
+    hovertemplate="영화: %{y}<br>이 기간 일관객 합계: %{x:,}명<br>10위권에 든 날수: %{customdata[0]}일<extra></extra>"
+)
+
+fig4.update_layout(
+    xaxis_title="이 기간 일관객 합계(명)",
+    yaxis_title="영화",
+)
+
+st.plotly_chart(fig4, use_container_width=True)
+
+st.markdown("**이 그래프로 알 수 있는 것**")
+st.text_input(
+    "문구를 입력하세요.",
+    placeholder="예: 이 기간 동안 누적 일관객이 가장 많았던 영화와 상위권 영화들의 차이를 비교할 수 있다.",
+    key="graph4_note",
+)
+
+# ============================================================
+# 그래프 5. 여기에 다음 그래프를 추가하세요.
+# ============================================================
+st.divider()
+st.header("5. 다음 그래프")
 st.info("앞으로 추가할 그래프를 이 구역에 넣을 수 있습니다.")
