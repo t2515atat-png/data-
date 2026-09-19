@@ -207,3 +207,9 @@ with st.expander("📋 회귀 분석에 사용된 연도별 데이터 보기"):
         use_container_width=True,
         hide_index=True
     )
+# 기울기를 100년 단위로, 그리고 최근 20년과 비교
+recent = yearly[yearly["연도"] >= yearly["연도"].max() - 19]
+a2, _ = np.polyfit(recent["연도"], recent["연평균기온"], 1)
+c1, c2 = st.columns(2)
+c1.metric("전체 기간 기울기", f"{a * 100:+.2f}℃ / 100년")
+c2.metric("최근 20년 기울기", f"{a2 * 100:+.2f}℃ / 100년")
