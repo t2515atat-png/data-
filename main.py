@@ -27,48 +27,26 @@ def load_data(url):
 
 
 # =====================================
-# 3. 사이드바
-# =====================================
-with st.sidebar:
-    st.title("🧠 뇌졸중 예측 실습실")
-    st.caption("데이터 분석 실습")
-
-    st.divider()
-
-    st.write("🏠 홈")
-    st.caption("현재 메인 페이지입니다.")
-
-    st.divider()
-
-    st.write("🔎 데이터 탐색")
-    st.caption("나이, 혈당, 고혈압, 심장병 분석")
-
-    st.info(
-        "다른 페이지로 이동하려면 "
-        "사이드바의 페이지 목록에서 "
-        "'탐색'을 선택하세요."
-    )
-
-# =====================================
-# 4. 제목
+# 3. 홈 화면
 # =====================================
 st.title("🧠 뇌졸중 예측 실습실")
 
 st.write(
-    "뇌졸중 데이터를 살펴보고 "
-    "데이터 분석과 예측 모델을 실습하는 공간입니다."
+    "뇌졸중 데이터를 탐색하고 분석하며 "
+    "예측 모델을 실습하는 공간입니다."
 )
 
 st.divider()
 
 # =====================================
-# 5. 데이터 불러오기
+# 4. 데이터 불러오기
 # =====================================
 st.subheader("📂 데이터 불러오기")
 
 data_url = st.text_input(
     "데이터 출처(URL)",
-    DEFAULT_DATA_URL,
+    value=DEFAULT_DATA_URL,
+    key="home_source_url",
 )
 
 try:
@@ -87,7 +65,7 @@ except Exception as e:
     st.stop()
 
 # =====================================
-# 6. 요약 통계
+# 5. 통계 계산
 # =====================================
 if "stroke" in df.columns:
     stroke_values = pd.to_numeric(
@@ -111,6 +89,9 @@ else:
     stroke_count = 0
     stroke_rate = 0
 
+# =====================================
+# 6. 요약 카드
+# =====================================
 st.subheader("📊 데이터 요약")
 
 col1, col2, col3, col4 = st.columns(4)
@@ -128,25 +109,22 @@ st.caption(
 st.divider()
 
 # =====================================
-# 7. 열 정보 및 한국어 의미 편집
+# 7. 열 정보 표
 # =====================================
 st.subheader("🗂️ 데이터 열 정보")
 
 st.write(
-    "한국어 의미 열의 빈칸을 클릭해 "
-    "각 변수의 의미를 입력하세요."
+    "한국어 의미 칸을 클릭하여 각 열의 의미를 입력하세요."
 )
 
 column_info = pd.DataFrame({
     "열 이름": df.columns.tolist(),
     "한국어 의미": ["" for _ in df.columns],
     "값의 유형": [
-        str(df[col].dtype)
-        for col in df.columns
+        str(df[col].dtype) for col in df.columns
     ],
     "결측값 개수": [
-        int(df[col].isna().sum())
-        for col in df.columns
+        int(df[col].isna().sum()) for col in df.columns
     ],
 })
 
@@ -161,26 +139,17 @@ st.data_editor(
         "결측값 개수",
     ],
     column_config={
-        "열 이름": st.column_config.TextColumn(
-            "열 이름"
-        ),
         "한국어 의미": st.column_config.TextColumn(
             "한국어 의미",
-            help="변수의 뜻을 직접 입력하세요.",
-        ),
-        "값의 유형": st.column_config.TextColumn(
-            "값의 유형"
-        ),
-        "결측값 개수": st.column_config.NumberColumn(
-            "결측값 개수",
-            format="%d",
+            help="각 열의 의미를 입력하세요.",
         ),
     },
+    key="home_column_editor",
 )
 
 st.caption(
-    "입력한 한국어 의미는 화면에서 수정할 수 있습니다. "
-    "현재 코드는 입력 내용을 별도 파일에 저장하지 않습니다."
+    "한국어 의미는 화면에서 편집할 수 있습니다. "
+    "별도 저장 기능은 포함되어 있지 않습니다."
 )
 
 st.divider()
@@ -190,8 +159,6 @@ st.divider()
 # =====================================
 st.subheader("🔍 데이터 미리보기")
 
-st.write("원본 데이터의 처음 5개 행입니다.")
-
 st.dataframe(
     df.head(5),
     use_container_width=True,
@@ -200,9 +167,10 @@ st.dataframe(
 
 st.divider()
 
-st.success(
-    "데이터를 불러왔습니다. "
-    "데이터 탐색 페이지에서 변수별 분포와 "
-    "집단 간 차이를 확인해 보세요."
+st.info(
+    "왼쪽 사이드바의 '1_탐색' 또는 '탐색' 페이지를 선택해 "
+    "데이터 분석 화면으로 이동하세요."
 )
+
+
 
