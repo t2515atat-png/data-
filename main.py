@@ -2,9 +2,9 @@
 import streamlit as st
 import pandas as pd
 
-# -----------------------------
-# 페이지 설정
-# -----------------------------
+# =====================================
+# 1. 페이지 기본 설정
+# =====================================
 st.set_page_config(
     page_title="뇌졸중 예측 실습실",
     page_icon="🧠",
@@ -12,9 +12,9 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# -----------------------------
-# 페이지 등록 및 사이드바 메뉴
-# -----------------------------
+# =====================================
+# 2. 페이지 등록
+# =====================================
 home_page = st.Page(
     "main.py",
     title="홈",
@@ -30,27 +30,30 @@ explore_page = st.Page(
 
 navigation = st.navigation(
     {
-        "메뉴": [home_page, explore_page],
+        "페이지 메뉴": [home_page, explore_page],
     },
     position="sidebar",
 )
 
-# 메뉴를 실제로 실행
-# 홈 페이지일 때 아래 코드가 표시됨
+# =====================================
+# 3. 데이터 불러오기 함수
+# =====================================
+DEFAULT_DATA_URL = (
+    "https://raw.githubusercontent.com/"
+    "greatsong/modudata/main/data/stroke.csv"
+)
+
+
+@st.cache_data
+def load_data(url):
+    return pd.read_csv(url, encoding="utf-8")
+
+
+# =====================================
+# 4. 홈 화면
+# =====================================
 if navigation == home_page:
 
-    DEFAULT_DATA_URL = (
-        "https://raw.githubusercontent.com/"
-        "greatsong/modudata/main/data/stroke.csv"
-    )
-
-    @st.cache_data
-    def load_data(url):
-        return pd.read_csv(url, encoding="utf-8")
-
-    # -----------------------------
-    # 제목
-    # -----------------------------
     st.title("🧠 뇌졸중 예측 실습실")
     st.write(
         "뇌졸중 데이터를 탐색하고 분석하며 "
@@ -59,17 +62,20 @@ if navigation == home_page:
 
     st.divider()
 
-    # -----------------------------
-    # 데이터 출처 입력
-    # -----------------------------
+    # ---------------------------------
+    # 데이터 불러오기
+    # ---------------------------------
     st.subheader("📂 데이터 불러오기")
 
     data_url = st.text_input(
         "데이터 출처(URL)",
         value=DEFAULT_DATA_URL,
-        key="data_url",
+        key="home_data_source_url",
     )
 
+    # ---------------------------------
+    # 데이터 로드 및 오류 처리
+    # ---------------------------------
     try:
         df = load_data(data_url.strip())
 
@@ -80,20 +86,24 @@ if navigation == home_page:
     except Exception as e:
         st.error(
             "데이터를 불러오지 못했습니다. "
-            "URL과 인터넷 연결을 확인하세요."
+            "URL과 인터넷 연결을 확인해 주세요."
         )
         st.exception(e)
         st.stop()
 
-    # -----------------------------
+    # ---------------------------------
     # 뇌졸중 통계 계산
-    # -----------------------------
+    # ---------------------------------
     if "stroke" in df.columns:
         stroke_values = pd.to_numeric(
-            df["stroke"], errors="coerce"
+            df["stroke"],
+            errors="coerce",
         )
 
-        stroke_count = int((stroke_values == 1).sum())
+        stroke_count = int(
+            (stroke_values == 1).sum()
+        )
+
         valid_count = int(
             stroke_values.isin([0, 1]).sum()
         )
@@ -107,17 +117,32 @@ if navigation == home_page:
         stroke_count = 0
         stroke_rate = 0
 
-    # -----------------------------
+    # ---------------------------------
     # 요약 카드 4개
-    # -----------------------------
+    # ---------------------------------
     st.subheader("📊 데이터 요약")
 
     col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("전체 인원", f"{len(df):,}명")
-    col2.metric("전체 열 개수", f"{len(df.columns):,}개")
-    col3.metric("뇌졸중 경험자", f"{stroke_count:,}명")
-    col4.metric("뇌졸중 경험 비율", f"{stroke_rate:.2f}%")
+    col1.metric(
+        "전체 인원",
+        f"{len(df):,}명",
+    )
+
+    col2.metric(
+        "전체 열 개수",
+        f"{len(df.columns):,}개",
+    )
+
+    col3.metric(
+        "뇌졸중 경험자",
+        f"{stroke_count:,}명",
+    )
+
+    col4.metric(
+        "뇌졸중 경험 비율",
+        f"{stroke_rate:.2f}%",
+    )
 
     st.caption(
         "뇌졸중 경험 비율은 stroke 값이 0 또는 1인 "
@@ -126,22 +151,25 @@ if navigation == home_page:
 
     st.divider()
 
-    # -----------------------------
+    # ---------------------------------
     # 열 정보 표
-    # -----------------------------
+    # ---------------------------------
     st.subheader("🗂️ 데이터 열 정보")
+
     st.write(
-        "한국어 의미 칸을 클릭해 각 열의 의미를 입력할 수 있습니다."
+        "한국어 의미 칸을 클릭해 각 열의 의미를 입력하세요."
     )
 
     column_info = pd.DataFrame({
-        "열 이름": df.columns,
+        "열 이름": df.columns.tolist(),
         "한국어 의미": ["" for _ in df.columns],
         "값의 유형": [
-            str(df[col].dtype) for col in df.columns
+            str(df[col].dtype)
+            for col in df.columns
         ],
         "결측값 개수": [
-            int(df[col].isna().sum()) for col in df.columns
+            int(df[col].isna().sum())
+            for col in df.columns
         ],
     })
 
@@ -155,19 +183,35 @@ if navigation == home_page:
             "값의 유형",
             "결측값 개수",
         ],
-        key="column_info_editor",
+        column_config={
+            "열 이름": st.column_config.TextColumn(
+                "열 이름",
+            ),
+            "한국어 의미": st.column_config.TextColumn(
+                "한국어 의미",
+                help="각 열의 의미를 직접 입력하세요.",
+            ),
+            "값의 유형": st.column_config.TextColumn(
+                "값의 유형",
+            ),
+            "결측값 개수": st.column_config.NumberColumn(
+                "결측값 개수",
+                format="%d",
+            ),
+        },
+        key="home_column_info_editor",
     )
 
     st.caption(
-        "한국어 의미는 화면에서 편집할 수 있습니다. "
-        "별도 저장 기능이 없으면 새로 실행할 때 유지되지 않을 수 있습니다."
+        "한국어 의미는 현재 화면에서 수정할 수 있습니다. "
+        "별도 저장 기능은 아직 포함되어 있지 않습니다."
     )
 
     st.divider()
 
-    # -----------------------------
+    # ---------------------------------
     # 데이터 미리보기
-    # -----------------------------
+    # ---------------------------------
     st.subheader("🔍 데이터 미리보기")
     st.write("원본 데이터의 처음 5개 행입니다.")
 
@@ -181,9 +225,13 @@ if navigation == home_page:
 
     st.info(
         "왼쪽 사이드바에서 '데이터 탐색'을 선택하면 "
-        "나이와 혈당의 분포 및 집단별 차이를 살펴볼 수 있습니다."
+        "나이, 혈당, 고혈압, 심장병 등의 데이터를 "
+        "그래프와 표로 확인할 수 있습니다."
     )
 
-# 페이지 표시
+# =====================================
+# 5. 선택한 페이지 실행
+# =====================================
 navigation.run()
+
 
