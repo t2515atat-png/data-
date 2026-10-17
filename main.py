@@ -101,8 +101,20 @@ score_page = st.Page(
     icon="📋",
 )
 
+preprocess_page = st.Page(
+    "pages/4_전처리.py",
+    title="전처리",
+    icon="🧹",
+)
+
 navigation = st.navigation(
-    [home_page, explore_page, model_page, score_page],
+    [
+        home_page,
+        explore_page,
+        model_page,
+        score_page,
+        preprocess_page,
+    ],
     position="sidebar",
 )
 
