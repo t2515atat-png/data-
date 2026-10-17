@@ -1,200 +1,48 @@
 
-import streamlit as st
+# pages/5_내가_만든_모델_소개.py — 오늘까지 만든 모델을 한 장으로 소개하는 서식
 import pandas as pd
+import streamlit as st
 
+st.set_page_config(page_title="내가 만든 모델 소개", page_icon="📝", layout="wide")
+st.title("📝 내가 만든 모델 소개 한 장")
+st.write("앞 페이지에서 본 값과 내가 내린 판단을 여기에 적습니다. 적은 내용은 저장되지 않으므로, "
+         "다 적은 뒤 화면을 갈무리하거나 활동지에 옮겨 적어 제출합니다.")
 
-st.title("📝 내가 만든 모델 소개")
-st.write(
-    "앞에서 탐구한 내용을 직접 정리해 모델 소개서를 완성해 보세요. "
-    "작성한 내용은 이 페이지의 화면에만 표시됩니다."
-)
+서식, 한장 = st.tabs(["① 채워 넣기", "② 한 장으로 보기"])
 
-# 성능 비교 항목
-METRICS = [
-    "정확도",
-    "재현율",
-    "F1",
-    "찾아낸 환자",
-    "헛짚은 사람",
-]
+빈칸 = {
+    "무슨 데이터입니까": "어디서 가져왔고, 몇 명이고, 맞히려는 것은 무엇입니까. 출처에 대해 알아 둘 것이 있습니까.",
+    "무엇을 보고 맞힙니까": "입력으로 사용한 것 넷을 적고, 사용하지 않기로 한 것을 하나 골라 까닭을 적습니다.",
+    "무엇을 고쳤습니까": "전처리 페이지에서 무엇을 바꾸었는지 한 줄로 적습니다.",
+    "이 모델을 검진센터가 사용해도 됩니까": "된다면 어떤 조건에서, 안 된다면 왜 그런지 적습니다.",
+    "이 모델이 못 하는 것 한 가지": "오늘 만든 모델이 답할 수 없는 것을 하나 적습니다.",
+}
 
-# 이 페이지에서만 사용하는 입력 항목
-QUESTIONS = [
-    ("intro_data", "1. 무슨 데이터입니까"),
-    ("intro_features", "2. 무엇을 보고 맞힙니까"),
-    ("intro_changes", "3. 무엇을 고쳤습니까"),
-    ("intro_safety", "4. 이 모델을 검진센터가 사용해도 됩니까"),
-    ("intro_limits", "5. 이 모델이 못 하는 것 한 가지"),
-]
+with 서식:
+    답 = {}
+    for 물음, 안내 in 빈칸.items():
+        답[물음] = st.text_area(물음, placeholder=안내, height=90, key=물음)
 
-# 입력 내용은 Streamlit 세션 상태에만 둔다.
-# 파일 저장, 다운로드, 외부 전송 기능은 제공하지 않는다.
-if "intro_metrics_before" not in st.session_state:
-    st.session_state["intro_metrics_before"] = {
-        metric: "" for metric in METRICS
-    }
+    st.markdown("**점수** · 채점표 페이지와 전처리 페이지에서 본 값을 옮겨 적습니다.")
+    점수표 = pd.DataFrame({
+        "항목": ["정확도", "재현율", "F1", "찾아낸 환자", "헛짚은 사람"],
+        "고치기 전": ["", "", "", "", ""],
+        "고친 뒤": ["", "", "", "", ""],
+    })
+    채운점수 = st.data_editor(점수표, width="stretch", hide_index=True,
+                              disabled=["항목"], key="점수표")
 
-if "intro_metrics_after" not in st.session_state:
-    st.session_state["intro_metrics_after"] = {
-        metric: "" for metric in METRICS
-    }
+with 한장:
+    st.markdown("### 내가 만든 모델 소개")
+    for 물음 in 빈칸:
+        적은것 = st.session_state.get(물음, "").strip()
+        st.markdown(f"**{물음}**")
+        st.markdown(적은것 if 적은것 else "_아직 적지 않았습니다._")
+    st.markdown("**점수**")
+    st.table(채운점수.set_index("항목"))
+    st.caption("빈칸이 남아 있으면 ① 채워 넣기 칸으로 돌아가 채웁니다. 이 화면은 저장되지 않습니다.")
 
-
-def show_answer(value):
-    """내용이 비어 있으면 미작성 안내를 표시한다."""
-    if value is None or not str(value).strip():
-        st.info("아직 적지 않았습니다.")
-    else:
-        st.write(value)
-
-
-tab_write, tab_preview = st.tabs(
-    ["✏️ 작성하기", "📄 한 장으로 보기"]
-)
-
-
-# ==================================================
-# 탭 1: 작성하기
-# ==================================================
-with tab_write:
-    st.subheader("1. 내가 만든 모델 설명")
-
-    st.caption(
-        "각 질문에 맞게 여러 문장으로 작성할 수 있습니다. "
-        "작성한 내용은 다른 탭에서도 확인할 수 있습니다."
-    )
-
-    for key, question in QUESTIONS:
-        st.markdown(f"**{question}**")
-
-        st.text_area(
-            question,
-            key=key,
-            height=120,
-            placeholder="여기에 내용을 적어 주세요.",
-            label_visibility="collapsed",
-        )
-
-    st.divider()
-    st.subheader("2. 모델 성능 비교표")
-
-    st.write(
-        "앞 페이지에서 확인한 값을 직접 옮겨 적으세요. "
-        "모델을 고치기 전과 고친 뒤의 결과를 비교하는 표입니다."
-    )
-
-    st.caption(
-        "백분율은 예를 들어 85.0%처럼 적고, 사람 수는 3명처럼 적어도 됩니다. "
-        "아직 값이 없으면 빈칸으로 두세요."
-    )
-
-    before_values = {}
-    after_values = {}
-
-    for metric in METRICS:
-        if metric not in st.session_state["intro_metrics_before"]:
-            st.session_state["intro_metrics_before"][metric] = ""
-        if metric not in st.session_state["intro_metrics_after"]:
-            st.session_state["intro_metrics_after"][metric] = ""
-
-    header1, header2, header3 = st.columns([1.2, 2, 2])
-    header1.markdown("**평가 항목**")
-    header2.markdown("**고치기 전**")
-    header3.markdown("**고친 뒤**")
-
-    for i, metric in enumerate(METRICS):
-        col1, col2, col3 = st.columns([1.2, 2, 2])
-
-        with col1:
-            st.write(metric)
-
-        with col2:
-            st.text_input(
-                f"{metric} - 고치기 전",
-                key=f"intro_before_{i}",
-                value=st.session_state["intro_metrics_before"][metric],
-                placeholder="값 입력",
-                label_visibility="collapsed",
-            )
-
-        with col3:
-            st.text_input(
-                f"{metric} - 고친 뒤",
-                key=f"intro_after_{i}",
-                value=st.session_state["intro_metrics_after"][metric],
-                placeholder="값 입력",
-                label_visibility="collapsed",
-            )
-
-    # 위젯에 입력한 값을 세션 상태의 비교표에 반영한다.
-    for i, metric in enumerate(METRICS):
-        st.session_state["intro_metrics_before"][metric] = (
-            st.session_state.get(f"intro_before_{i}", "")
-        )
-        st.session_state["intro_metrics_after"][metric] = (
-            st.session_state.get(f"intro_after_{i}", "")
-        )
-
-    st.divider()
-    st.caption(
-        "작성 내용은 현재 앱 화면의 세션 상태에서만 사용합니다. "
-        "이 페이지에는 파일 저장이나 외부 전송 기능이 없습니다."
-    )
-
-
-# ==================================================
-# 탭 2: 한 장으로 보기
-# ==================================================
-with tab_preview:
-    st.subheader("내가 만든 모델 소개서")
-
-    st.caption(
-        "작성하기 탭에 적은 내용을 순서대로 모아 보여 줍니다. "
-        "비어 있는 항목은 미작성으로 표시합니다."
-    )
-
-    for number, (key, question) in enumerate(QUESTIONS, start=1):
-        st.markdown(f"### {number}. {question}")
-        show_answer(st.session_state.get(key, ""))
-
-    st.divider()
-    st.markdown("### 6. 모델 성능 비교표")
-
-    preview_rows = []
-
-    for metric in METRICS:
-        before_value = st.session_state["intro_metrics_before"].get(
-            metric, ""
-        )
-        after_value = st.session_state["intro_metrics_after"].get(
-            metric, ""
-        )
-
-        preview_rows.append({
-            "평가 항목": metric,
-            "고치기 전": (
-                before_value.strip()
-                if str(before_value).strip()
-                else "아직 적지 않았습니다"
-            ),
-            "고친 뒤": (
-                after_value.strip()
-                if str(after_value).strip()
-                else "아직 적지 않았습니다"
-            ),
-        })
-
-    preview_table = pd.DataFrame(preview_rows)
-
-    st.dataframe(
-        preview_table,
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    st.divider()
-    st.caption(
-        "이 소개서는 작성 내용을 화면에 모아 보여 주는 용도입니다. "
-        "내용을 파일로 저장하거나 다른 곳으로 보내지 않습니다."
-    )
-
+st.divider()
+st.info("**이 흐름은 다른 데이터에도 그대로 됩니다** · 오늘까지 만든 앱은 데이터를 소개하고, 들여다보고, "
+        "모델을 만들고, 채점하고, 고치고, 판단하는 여섯 단계로 이루어져 있습니다. "
+        "바뀐 것은 데이터 주소와 열 이름뿐입니다.")
