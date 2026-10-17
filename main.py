@@ -1,4 +1,5 @@
 
+
 import streamlit as st
 import pandas as pd
 
@@ -57,7 +58,9 @@ def show_home():
         "열 이름": df.columns.tolist(),
         "한국어 의미": ["" for _ in df.columns],
         "값의 유형": [str(df[col].dtype) for col in df.columns],
-        "결측값 개수": [int(df[col].isna().sum()) for col in df.columns],
+        "결측값 개수": [
+            int(df[col].isna().sum()) for col in df.columns
+        ],
     })
 
     st.data_editor(
@@ -107,6 +110,12 @@ preprocess_page = st.Page(
     icon="🧹",
 )
 
+introduction_page = st.Page(
+    "pages/5_내가_만든_모델_소개.py",
+    title="내가 만든 모델 소개",
+    icon="📝",
+)
+
 navigation = st.navigation(
     [
         home_page,
@@ -114,6 +123,7 @@ navigation = st.navigation(
         model_page,
         score_page,
         preprocess_page,
+        introduction_page,
     ],
     position="sidebar",
 )
